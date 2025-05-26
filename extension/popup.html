@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codeforces AI Assistant</title>
+    <style>
+        body {
+            width: 350px;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="password"]:focus, input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .help-text {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Codeforces AI Assistant</h1>
+        
+        <div class="input-group">
+            <label for="apiKey">OpenRouter API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your OpenRouter API key">
+            <div class="help-text">Get your API key from <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a></div>
+        </div>
+        
+        <div class="input-group" style="margin-top: 15px;">
+            <label for="preferredLanguage">Preferred Programming Language:</label>
+            <select id="preferredLanguage" class="select-input">
+                <option value="cpp">C++</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="javascript">JavaScript</option>
+                <option value="c">C</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go</option>
+            </select>
+        </div>
+        
+        <button class="button" id="saveKey">Save Settings</button>
+        <button class="button" id="testConnection">Test Connection</button>
+        <button class="button" id="clearKey">Clear API Key</button>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="help-text" style="margin-top: 15px; text-align: center;">
+            Visit any Codeforces problem page to see the AI assistant in action!
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
