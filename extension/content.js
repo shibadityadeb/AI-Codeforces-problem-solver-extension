@@ -1,5 +1,5 @@
-if (!window.__CodeforcesAIAssistantLoaded) {
-    window.__CodeforcesAIAssistantLoaded = true;
+if (!window.__CodeforcesAIAssistantDefined) {
+    window.__CodeforcesAIAssistantDefined = true;
 
 // Enhanced Content script for Codeforces AI Assistant using OpenRouter
 
@@ -9,24 +9,29 @@ class CodeforcesAIAssistant {
         this.chatWidget = null;
         this.isInitialized = false;
         this.currentProblemUrl = null;
-        this.helpLevel = 0; // 0: explanation, 1: hints, 2: concepts, 3: solution
+        this.helpLevel = 0; // 0: explanation, 1: hints, 2: concepts
         this.preferredLanguage = 'cpp'; // default programming language
+        const existingWidget = document.getElementById('cf-ai-assistant');
+        if (existingWidget) existingWidget.remove();
         this.init();
     }
 
     async init() {
         const result = await chrome.storage.sync.get(['openRouterApiKey']);
         this.apiKey = result.openRouterApiKey;
-        console.log('Retrieved API Key:', this.apiKey);
-
         if (!this.apiKey) {
-            console.warn('[Codeforces AI Assistant] No OpenRouter API key found.');
+            this.createChatWidget();
+            this.addMessage(
+                `<strong>API Key Required</strong><br>Please set your OpenRouter API key in the extension popup.<br><br><a href="https://openrouter.ai/keys" target="_blank">Get your API key here</a>.`,
+                'bot', true
+            );
             return;
         }
-
+        // Always reset help level to 0 for the current problem
+        this.helpLevel = 0;
+        this.saveProblemState();
         if (this.isOnProblemPage() && !document.getElementById('cf-ai-assistant')) {
             this.currentProblemUrl = window.location.href;
-            await this.loadProblemState();
             this.createChatWidget();
             this.isInitialized = true;
         }
@@ -85,9 +90,10 @@ class CodeforcesAIAssistant {
     createChatWidget() {
         this.chatWidget = document.createElement('div');
         this.chatWidget.id = 'cf-ai-assistant';
+        this.chatWidget.style.display = 'none'; // Hide by default
         this.chatWidget.innerHTML = `
             <div class="cf-ai-header">
-                <span>🤖 AI Assistant (Level ${this.helpLevel + 1}/4)</span>
+                <span>🤖 AI Assistant (Level ${this.helpLevel + 1}/3)</span>
                 <div class="cf-ai-controls">
                     <select id="cf-ai-language" class="cf-ai-lang-select">
                         <option value="cpp">C++</option>
@@ -120,14 +126,14 @@ class CodeforcesAIAssistant {
         
         // Set selected language
         document.getElementById('cf-ai-language').value = this.preferredLanguage;
+        this.chatWidget.style.display = 'block'; // Show when created from launcher
     }
 
     getHelpButtonText() {
         const helpTexts = [
             'Explain Problem',
             'Get Hints',
-            'Show Concepts',
-            'Give Solution'
+            'Show Concepts'
         ];
         return helpTexts[this.helpLevel] || 'Explain Problem';
     }
@@ -136,7 +142,7 @@ class CodeforcesAIAssistant {
         const body = document.querySelector('.cf-ai-body');
         
         document.getElementById('cf-ai-minimize').addEventListener('click', () => {
-            body.style.display = body.style.display === 'none' ? 'block' : 'none';
+            this.chatWidget.style.display = 'none';
         });
 
         document.getElementById('cf-ai-close').addEventListener('click', () => {
@@ -160,7 +166,8 @@ class CodeforcesAIAssistant {
             }
         });
 
-        document.getElementById('cf-ai-help').addEventListener('click', () => this.provideProgressiveHelp());
+        const helpBtn = document.getElementById('cf-ai-help');
+        helpBtn.addEventListener('click', () => this.provideProgressiveHelp());
 
         this.makeDraggable();
     }
@@ -189,13 +196,12 @@ class CodeforcesAIAssistant {
         const levelDescriptions = [
             "I'll explain the problem clearly",
             "I'll give you strategic hints",
-            "I'll show key concepts needed",
-            "I'll provide the complete solution"
+            "I'll show key concepts needed"
         ];
         
         this.addMessage(`
             👋 <strong>Welcome!</strong><br>
-            Current Help Level: <strong>${this.helpLevel + 1}/4</strong><br>
+            Current Help Level: <strong>${this.helpLevel + 1}/3</strong><br>
             ${levelDescriptions[this.helpLevel]}<br><br>
             
             <strong>Progressive Help System:</strong>
@@ -203,11 +209,10 @@ class CodeforcesAIAssistant {
                 <li><strong>Level 1:</strong> Problem Explanation</li>
                 <li><strong>Level 2:</strong> Hints & Approach</li>
                 <li><strong>Level 3:</strong> Key Concepts</li>
-                <li><strong>Level 4:</strong> Complete Solution</li>
             </ul>
             
             Click the main help button or ask me anything!
-        `, 'bot');
+        `, 'bot', true);
     }
 
     async resetProgress() {
@@ -215,47 +220,56 @@ class CodeforcesAIAssistant {
         await this.saveProblemState();
         
         // Update UI
-        document.querySelector('.cf-ai-header span').textContent = `🤖 AI Assistant (Level ${this.helpLevel + 1}/4)`;
-        document.getElementById('cf-ai-help').textContent = this.getHelpButtonText();
+        document.querySelector('.cf-ai-header span').textContent = `🤖 AI Assistant (Level ${this.helpLevel + 1}/3)`;
+        const helpBtn = document.getElementById('cf-ai-help');
+        helpBtn.textContent = this.getHelpButtonText();
         
         this.addMessage('🔄 Progress reset! Starting from Level 1: Problem Explanation', 'bot');
     }
 
     async provideProgressiveHelp() {
-        const problemData = this.getProblemData();
+        const helpBtn = document.getElementById('cf-ai-help');
+        helpBtn.disabled = true;
+        const originalText = helpBtn.textContent;
+        helpBtn.textContent = 'Fetching data...';
+        const problemData = this.extractProblemData();
         if (!problemData) {
             this.addMessage('⚠️ Could not load problem data. Please refresh the page.', 'error');
+            helpBtn.disabled = false;
+            helpBtn.textContent = originalText;
             return;
         }
-
         let response;
         switch (this.helpLevel) {
             case 0:
-                response = await this.getProblemExplanation(problemData);
+                response = `<h3>Explanation</h3>\n` + await this.getProblemExplanation(problemData);
                 this.helpLevel = 1;
                 break;
             case 1:
-                response = await this.getHints(problemData);
+                response = `<h3>Hints</h3>\n` + await this.getHints(problemData);
                 this.helpLevel = 2;
                 break;
             case 2:
-                response = await this.getConcepts(problemData);
+                response = `<h3>Concepts</h3>\n` + await this.getConcepts(problemData);
                 this.helpLevel = 3;
-                break;
-            case 3:
-                response = await this.getSolution(problemData, this.preferredLanguage);
-                this.helpLevel = 4;
                 break;
             default:
                 response = "You've reached the maximum help level. Try solving the problem now!";
                 this.helpLevel = 0;
         }
-
-        this.addMessage(response, 'ai');
+        this.addMessage(response, 'ai', true);
         await this.saveProblemState();
+        document.querySelector('.cf-ai-header span').textContent = `🤖 AI Assistant (Level ${Math.min(this.helpLevel + 1, 3)}/3)`;
+        helpBtn.textContent = this.getHelpButtonText();
+        if (this.helpLevel >= 3) {
+            helpBtn.disabled = true;
+            helpBtn.textContent = 'Done';
+        } else {
+            helpBtn.disabled = false;
+        }
     }
 
-    async getProblemExplanation(problemData) {
+    getProblemExplanation(problemData) {
         const prompt = `You are a helpful programming tutor. Explain this Codeforces problem in a clear and concise way:
 
 ${this.formatProblemPrompt(problemData)}
@@ -269,7 +283,7 @@ Please provide:
 
 Make it easy to understand for someone new to competitive programming.`;
 
-        return await this.callOpenRouterAPI(prompt);
+        return this.callOpenRouterAPI(prompt);
     }
 
     async getHints(problemData) {
@@ -306,33 +320,6 @@ Focus on teaching the concepts they need to know, with brief examples where help
         return await this.callOpenRouterAPI(prompt);
     }
 
-    async getSolution(problemData, language) {
-        const languageMap = {
-            'cpp': 'C++',
-            'python': 'Python',
-            'java': 'Java',
-            'javascript': 'JavaScript',
-            'c': 'C',
-            'rust': 'Rust',
-            'go': 'Go'
-        };
-
-        const prompt = `You are a helpful programming tutor. Provide a complete, well-commented solution for this Codeforces problem in ${languageMap[language]}.
-
-${this.formatProblemPrompt(problemData)}
-
-Please provide:
-1. Complete working solution in ${languageMap[language]}
-2. Detailed comments explaining each part
-3. Time and space complexity analysis
-4. Explanation of the algorithm used
-5. Any alternative approaches (briefly)
-
-Make sure the code is clean, efficient, and follows competitive programming best practices for ${languageMap[language]}.`;
-
-        return await this.callOpenRouterAPI(prompt);
-    }
-
     async sendMessage() {
         const input = document.getElementById('cf-ai-input');
         const userMessage = input.value.trim();
@@ -347,7 +334,7 @@ Make sure the code is clean, efficient, and follows competitive programming best
     }
 
     async getAIResponse(userMessage, problemData) {
-        const contextPrompt = `You are a helpful AI assistant for Codeforces programming problems. The user is currently at help level ${this.helpLevel + 1}/4 for this problem. Their preferred programming language is ${this.preferredLanguage}.
+        const contextPrompt = `You are a helpful AI assistant for Codeforces programming problems. The user is currently at help level ${this.helpLevel + 1}/3 for this problem. Their preferred programming language is ${this.preferredLanguage}.
 
 Current Problem:
 ${this.formatProblemPrompt(problemData)}
@@ -403,13 +390,22 @@ ${s.output}`).join('\n\n')}`;
         }
     }
 
-    addMessage(content, sender) {
+    addMessage(content, sender, isHtml = false) {
         const messagesDiv = document.getElementById('cf-ai-messages');
         const msgDiv = document.createElement('div');
         msgDiv.className = `cf-ai-message cf-ai-${sender}`;
         const msgContent = document.createElement('div');
         msgContent.className = 'cf-ai-message-content';
-        msgContent.innerHTML = sender === 'bot' ? this.formatMarkdown(content) : this.escapeHtml(content);
+        
+        // Fix HTML rendering
+        if (isHtml) {
+            msgContent.innerHTML = content;
+        } else if (sender === 'bot' || sender === 'ai') {
+            msgContent.innerHTML = this.formatMarkdown(content);
+        } else {
+            msgContent.textContent = content;
+        }
+        
         msgDiv.appendChild(msgContent);
         messagesDiv.appendChild(msgDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -423,14 +419,49 @@ ${s.output}`).join('\n\n')}`;
     }
 
     formatMarkdown(text) {
-        return this.escapeHtml(text)
-            .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code class="language-${lang || ''}">${code}</code></pre>`)
+        // First escape HTML to prevent XSS
+        const escaped = this.escapeHtml(text);
+        
+        // Then convert markdown to HTML
+        return escaped
+            .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => 
+                `<pre><code class="language-${lang || ''}">${this.escapeHtml(code)}</code></pre>`)
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n/g, '<br>');
+            .replace(/\n/g, '<br>')
+            .replace(/<br><br>/g, '<br>'); // Remove double line breaks
     }
 }
+
+// Floating launcher function and initialization (now after the class definition)
+function createFloatingLauncher() {
+    if (document.getElementById('cf-ai-launcher')) return;
+    const launcher = document.createElement('div');
+    launcher.id = 'cf-ai-launcher';
+    launcher.innerHTML = `<span style="font-size: 28px;">💬</span>`;
+    launcher.title = 'Open Codeforces AI Assistant';
+    document.body.appendChild(launcher);
+    launcher.addEventListener('click', () => {
+        const widget = document.getElementById('cf-ai-assistant');
+        if (widget && widget.style.display !== 'none') {
+            widget.style.display = 'none';
+        } else {
+            if (widget) {
+                widget.style.display = 'block';
+            } else {
+                new CodeforcesAIAssistant();
+            }
+        }
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', createFloatingLauncher);
+} else {
+    createFloatingLauncher();
+}
+
+// Listen for messages to launch widget from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'initializeWidget' || request.action === 'apiKeyUpdated') {
         console.log('[AI Assistant] Re-initializing widget from message...');
@@ -438,11 +469,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse?.({ success: true });
     }
 });
-
-// Initialize assistant once DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => new CodeforcesAIAssistant());
-} else {
-    new CodeforcesAIAssistant();
-}
 }
