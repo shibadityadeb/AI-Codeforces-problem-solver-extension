@@ -16,15 +16,12 @@ class CodeforcesAIAssistant {
         this.init();
     }
 
-    async init() {
-        const result = await chrome.storage.sync.get(['openRouterApiKey']);
+    async init(languageOverride) {
+        const result = await chrome.storage.sync.get(['openRouterApiKey', 'preferredLanguage']);
         this.apiKey = result.openRouterApiKey;
+        this.preferredLanguage = languageOverride || result.preferredLanguage || 'cpp';
         if (!this.apiKey) {
-            this.createChatWidget();
-            this.addMessage(
-                `<strong>API Key Required</strong><br>Please set your OpenRouter API key in the extension popup.<br><br><a href="https://openrouter.ai/keys" target="_blank">Get your API key here</a>.`,
-                'bot', true
-            );
+            // Do not proceed if API key is missing
             return;
         }
         // Always reset help level to 0 for the current problem
@@ -508,13 +505,13 @@ if (document.readyState === 'loading') {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'initializeWidget' || request.action === 'apiKeyUpdated' || request.action === 'saveSettings') {
         console.log('[AI Assistant] Re-initializing widget from message...');
-        new CodeforcesAIAssistant();
+        new CodeforcesAIAssistant().init(request.language);
         conditionalLauncher();
         sendResponse?.({ success: true });
     }
     if (request.action === 'clearKey') {
         const launcher = document.getElementById('cf-ai-launcher');
-        if (launcher) launcher.remove();
+        if (launcher) launcher.classList.add('cf-ai-launcher-hidden');
     }
 });
 }

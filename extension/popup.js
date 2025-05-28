@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Attempt to launch widget if on Codeforces problem page
-            launchAIWidget();
+            launchAIWidget(apiKey, language);
         });
     });
 
@@ -91,16 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0) {
-                    showStatus('✅ Connection successful!', 'success');
-                    
-                    // Auto-save on successful test
-                    if (!apiKeyInput.value || apiKeyInput.value !== apiKey) {
-                        apiKeyInput.value = apiKey;
-                        saveKeyButton.click();
-                    }
-                    
-                    // Launch AI widget on current Codeforces tab after successful test
-                    launchAIWidget();
+                    showStatus('✅ Connection successful! Now click Save Settings to launch the AI widget.', 'success');
+                    // Do not launch widget or close popup here
                 } else {
                     throw new Error('Invalid response format');
                 }
@@ -134,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Function to launch AI widget
-    function launchAIWidget() {
+    function launchAIWidget(apiKey, language) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             const currentTab = tabs[0];
             
@@ -154,8 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Send message to initialize the widget
                         chrome.tabs.sendMessage(currentTab.id, {
                             action: 'initializeWidget',
-                            apiKey: apiKeyInput.value.trim(),
-                            language: languageSelect.value
+                            apiKey: apiKey,
+                            language: language
                         });
                         showStatus('🤖 AI Widget launched!', 'success');
                         
