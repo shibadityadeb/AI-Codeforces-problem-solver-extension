@@ -90,7 +90,7 @@ class CodeforcesAIAssistant {
     createChatWidget() {
         this.chatWidget = document.createElement('div');
         this.chatWidget.id = 'cf-ai-assistant';
-        this.chatWidget.style.display = 'none'; // Hide by default
+        this.chatWidget.classList.add('cf-ai-hidden'); // Hide by default
         this.chatWidget.innerHTML = `
             <div class="cf-ai-header">
                 <span>🤖 AI Assistant (Level ${this.helpLevel + 1}/3)</span>
@@ -126,7 +126,7 @@ class CodeforcesAIAssistant {
         
         // Set selected language
         document.getElementById('cf-ai-language').value = this.preferredLanguage;
-        this.chatWidget.style.display = 'block'; // Show when created from launcher
+        this.chatWidget.classList.remove('cf-ai-hidden'); // Show when created from launcher
     }
 
     getHelpButtonText() {
@@ -142,11 +142,11 @@ class CodeforcesAIAssistant {
         const body = document.querySelector('.cf-ai-body');
         
         document.getElementById('cf-ai-minimize').addEventListener('click', () => {
-            this.chatWidget.style.display = 'none';
+            this.chatWidget.classList.add('cf-ai-hidden');
         });
 
         document.getElementById('cf-ai-close').addEventListener('click', () => {
-            this.chatWidget.style.display = 'none';
+            this.chatWidget.classList.add('cf-ai-hidden');
         });
 
         document.getElementById('cf-ai-reset').addEventListener('click', () => {
@@ -396,19 +396,46 @@ ${s.output}`).join('\n\n')}`;
         msgDiv.className = `cf-ai-message cf-ai-${sender}`;
         const msgContent = document.createElement('div');
         msgContent.className = 'cf-ai-message-content';
-        
-        // Fix HTML rendering
-        if (isHtml) {
+        if (sender === 'bot' || sender === 'ai') {
+            //typing effect for bopt response
+            msgContent.innerHTML = '';
+            msgDiv.appendChild(msgContent);
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            this.typeText(msgContent, isHtml ? content : this.formatMarkdown(content));
+            return;
+        } else if (isHtml) {
             msgContent.innerHTML = content;
-        } else if (sender === 'bot' || sender === 'ai') {
-            msgContent.innerHTML = this.formatMarkdown(content);
         } else {
             msgContent.textContent = content;
         }
-        
         msgDiv.appendChild(msgContent);
         messagesDiv.appendChild(msgDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    typeText(element, html, speed = 18) {
+        //typing effect
+        let i = 0;
+        let tag = '';
+        let isTag = false;
+        function type() {
+            if (i < html.length) {
+                if (html[i] === '<') isTag = true;
+                if (isTag) tag += html[i];
+                else element.innerHTML += html[i];
+                if (html[i] === '>') {
+                    isTag = false;
+                    element.innerHTML += tag;
+                    tag = '';
+                }
+                i++;
+                setTimeout(type, speed);
+            } else if (tag) {
+                element.innerHTML += tag;
+            }
+        }
+        type();
     }
 
     escapeHtml(text) {
@@ -434,7 +461,22 @@ ${s.output}`).join('\n\n')}`;
     }
 }
 
-// Floating launcher function and initialization (now after the class definition)
+//if API key is present and on a Codeforces problem page
+async function conditionalLauncher() {
+    const url = window.location.href;
+    const isCF = url.includes('codeforces.com') && (url.includes('/problem/') || url.includes('/problemset/problem/'));
+    if (!isCF) return;
+    const result = await chrome.storage.sync.get(['openRouterApiKey']);
+    if (result.openRouterApiKey) {
+        createFloatingLauncher();
+        const launcher = document.getElementById('cf-ai-launcher');
+        if (launcher) launcher.classList.remove('cf-ai-launcher-hidden');
+    } else {
+        const launcher = document.getElementById('cf-ai-launcher');
+        if (launcher) launcher.classList.add('cf-ai-launcher-hidden');
+    }
+}
+
 function createFloatingLauncher() {
     if (document.getElementById('cf-ai-launcher')) return;
     const launcher = document.createElement('div');
@@ -444,29 +486,35 @@ function createFloatingLauncher() {
     document.body.appendChild(launcher);
     launcher.addEventListener('click', () => {
         const widget = document.getElementById('cf-ai-assistant');
-        if (widget && widget.style.display !== 'none') {
-            widget.style.display = 'none';
+        if (widget && !widget.classList.contains('cf-ai-hidden')) {
+            widget.classList.add('cf-ai-hidden');
         } else {
             if (widget) {
-                widget.style.display = 'block';
+                widget.classList.remove('cf-ai-hidden');
             } else {
                 new CodeforcesAIAssistant();
             }
         }
     });
 }
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createFloatingLauncher);
+    document.addEventListener('DOMContentLoaded', conditionalLauncher);
 } else {
-    createFloatingLauncher();
+    conditionalLauncher();
 }
 
-// Listen for messages to launch widget from popup
+//messages to launch widget from popup or on API key update
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'initializeWidget' || request.action === 'apiKeyUpdated') {
+    if (request.action === 'initializeWidget' || request.action === 'apiKeyUpdated' || request.action === 'saveSettings') {
         console.log('[AI Assistant] Re-initializing widget from message...');
         new CodeforcesAIAssistant();
+        conditionalLauncher();
         sendResponse?.({ success: true });
+    }
+    if (request.action === 'clearKey') {
+        const launcher = document.getElementById('cf-ai-launcher');
+        if (launcher) launcher.remove();
     }
 });
 }
