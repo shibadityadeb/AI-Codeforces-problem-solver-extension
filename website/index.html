@@ -3,362 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Codeforces AI Assistant - Powered by Gemini</title>
+    <title>Codeforces AI Assistant - Powered by OpenRouter</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 0;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 120px 0 80px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.05)" points="0,1000 1000,0 1000,1000"/></svg>');
-            background-size: cover;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #fff, #e2e8f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-primary:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: transparent;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 80px 0;
-            background: #f8f9fa;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #2d3748;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: #2d3748;
-        }
-
-        /* Download Section */
-        .download {
-            padding: 80px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-        }
-
-        .download-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .download-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .download-card:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-5px);
-        }
-
-        .download-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Setup Guide */
-        .setup {
-            padding: 80px 0;
-            background: white;
-        }
-
-        .setup-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .step {
-            text-align: center;
-            padding: 2rem;
-            border-radius: 15px;
-            background: #f8f9fa;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .step:hover {
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .step-number {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin: 0 auto 1rem;
-        }
-
-        /* Footer */
-        footer {
-            background: #2d3748;
-            color: white;
-            text-align: center;
-            padding: 2rem 0;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .social-links a {
-            color: white;
-            font-size: 1.5rem;
-            transition: opacity 0.3s;
-        }
-
-        .social-links a:hover {
-            opacity: 0.7;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        /* Code block styling */
-        .code-block {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin: 1rem 0;
-            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
@@ -431,15 +78,15 @@
                     <div class="feature-icon">
                         <i class="fas fa-comments"></i>
                     </div>
-                    <h3>Interactive Chat</h3>
-                    <p>Have natural conversations with the AI about problems, approaches, and implementation details.</p>
+                    <h3>Interactive Chatbot</h3>
+                    <p>Launch an AI chatbot directly on Codeforces problem pages for instant help and guidance.</p>
                 </div>
                 <div class="feature-card fade-in-up">
                     <div class="feature-icon">
-                        <i class="fas fa-rocket"></i>
+                        <i class="fas fa-network-wired"></i>
                     </div>
-                    <h3>Powered by Gemini</h3>
-                    <p>Leverages Google's advanced Gemini AI for accurate and helpful programming assistance.</p>
+                    <h3>Powered by OpenRouter</h3>
+                    <p>Access multiple AI models through OpenRouter's unified API for the best programming assistance.</p>
                 </div>
             </div>
         </div>
@@ -482,34 +129,48 @@
             <div class="setup-steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>Get Gemini API Key</h3>
-                    <p>Visit Google AI Studio and create your free Gemini API key</p>
+                    <h3>Get OpenRouter API Key</h3>
+                    <p>Visit OpenRouter and create your API key to access multiple AI models</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>Install Extension</h3>
-                    <p>Download and install the Chrome extension from above</p>
+                    <h3>Test Your API Key</h3>
+                    <p>Verify your API key works correctly before proceeding</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h3>Configure API Key</h3>
-                    <p>Click the extension icon and enter your Gemini API key</p>
+                    <h3>Install Extension</h3>
+                    <p>Download and install the Chrome extension</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
-                    <h3>Start Coding!</h3>
-                    <p>Visit any Codeforces problem and see the AI assistant appear</p>
+                    <h3>Configure & Launch</h3>
+                    <p>Enter your API key and launch the AI chatbot on any Codeforces problem page</p>
                 </div>
             </div>
 
             <div style="margin-top: 3rem; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
-                <h3 style="margin-bottom: 1rem;">Getting Your Gemini API Key:</h3>
-                <div class="code-block">
-1. Go to https://makersuite.google.com/app/apikey
-2. Sign in with your Google account
-3. Click "Create API Key"
-4. Copy the generated key
-5. Paste it in the extension popup
+                <div class="api-info-box">
+                    <h4>🔑 Getting Your OpenRouter API Key:</h4>
+                    <div class="code-block">
+1. Go to https://openrouter.ai/
+2. Sign up or log in to your account
+3. Navigate to the API Keys section
+4. Click "Create New Key"
+5. Copy the generated API key
+6. Test the key to ensure it's working
+7. Enter it in the extension popup
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>💡 Why OpenRouter?</strong><br>
+                    OpenRouter provides access to multiple AI models including GPT-4, Claude, and others through a single API, giving you the flexibility to choose the best model for your coding needs.
+                </div>
+
+                <div class="api-info-box">
+                    <h4>🚀 How It Works:</h4>
+                    <p>Once configured, simply visit any Codeforces problem page and the AI chatbot will be available to help you understand the problem, get hints, discuss algorithms, and improve your competitive programming skills.</p>
                 </div>
             </div>
         </div>
@@ -519,7 +180,7 @@
         <div class="container">
             <div class="footer-content">
                 <div>
-                    <p>&copy; 2025 Codeforces AI Assistant. Made with ❤️ by Shibaditya Deb , for competitive programmers.</p>
+                    <p>&copy; 2025 Codeforces AI Assistant. Made with ❤️ by Shibaditya Deb, for competitive programmers.</p>
                 </div>
                 <div class="social-links">
                     <a href="#"><i class="fab fa-github"></i></a>
@@ -530,84 +191,6 @@
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Download handlers
-        document.getElementById('downloadChrome').addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Create and download the extension zip
-            alert('Extension package will be downloaded. Please follow the manual installation instructions that will appear.');
-            
-            // Instructions for manual installation
-            const instructions = `
-Manual Installation Instructions:
-
-1. Download the extension files
-2. Open Chrome and go to chrome://extensions/
-3. Enable "Developer mode" (toggle in top right)
-4. Click "Load unpacked"
-5. Select the extracted extension folder
-6. The extension will appear in your browser toolbar
-
-The extension files have been packaged for you to download.
-            `;
-            
-            setTimeout(() => {
-                alert(instructions);
-            }, 1000);
-        });
-
-        document.getElementById('viewSource').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('GitHub repository will be available soon. For now, the source code is included in the download package.');
-        });
-
-        // Animate elements on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // Observe elements
-        document.querySelectorAll('.fade-in-up').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.6s ease-out';
-            observer.observe(el);
-        });
-
-        // Header background on scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(102, 126, 234, 0.95)';
-            } else {
-                header.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
