@@ -17,7 +17,7 @@ This extension is designed to streamline problem-solving on platforms like **Cod
 - 💬 **In-Browser AI Chatbot (ChatGPT 3.5 Turbo)**
   - Seamlessly launches once settings are configured.
 - 🧠 **Intelligent Assistance with Command Levels**
-  - `step1` – *Explain the problem*
+  - `level1` – *Explain the problem*
   - `level2` – *Give hints*
   - `level3` – *Show concepts*
 - 🛠️ **Custom Commands Support**
