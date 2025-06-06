@@ -1,7 +1,7 @@
 if (!window.__CodeforcesAIAssistantDefined) {
     window.__CodeforcesAIAssistantDefined = true;
 
-// Enhanced Content script for Codeforces AI Assistant using OpenRouter
+//content script 
 
 class CodeforcesAIAssistant {
     constructor() {
@@ -9,8 +9,8 @@ class CodeforcesAIAssistant {
         this.chatWidget = null;
         this.isInitialized = false;
         this.currentProblemUrl = null;
-        this.helpLevel = 0; // 0: explanation, 1: hints, 2: concepts
-        this.preferredLanguage = 'cpp'; // default programming language
+        this.helpLevel = 0; 
+        this.preferredLanguage = 'cpp'; // default programming language:c++
         const existingWidget = document.getElementById('cf-ai-assistant');
         if (existingWidget) existingWidget.remove();
         this.init();
@@ -24,7 +24,7 @@ class CodeforcesAIAssistant {
             // Do not proceed if API key is missing
             return;
         }
-        // Always reset help level to 0 for the current problem
+        //reset help level to 0 
         this.helpLevel = 0;
         this.saveProblemState();
         if (this.isOnProblemPage() && !document.getElementById('cf-ai-assistant')) {
@@ -121,9 +121,9 @@ class CodeforcesAIAssistant {
         this.setupEventListeners();
         this.addWelcomeMessage();
         
-        // Set selected language
+        //selected language
         document.getElementById('cf-ai-language').value = this.preferredLanguage;
-        this.chatWidget.classList.remove('cf-ai-hidden'); // Show when created from launcher
+        this.chatWidget.classList.remove('cf-ai-hidden');
     }
 
     getHelpButtonText() {

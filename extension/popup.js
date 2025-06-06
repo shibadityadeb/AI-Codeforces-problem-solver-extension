@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusDiv = document.getElementById('status');
     const languageSelect = document.getElementById('preferredLanguage');
 
-    // Load existing settings
+    //existing settings
     chrome.storage.sync.get(['openRouterApiKey', 'preferredLanguage'], function(result) {
         if (result.openRouterApiKey) {
             apiKeyInput.value = result.openRouterApiKey;
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Save settings
+    //save settings
     saveKeyButton.addEventListener('click', function () {
         const apiKey = apiKeyInput.value.trim();
         const language = languageSelect.value;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Basic validation
+        // validation
         if (!apiKey.startsWith('sk-') && !apiKey.startsWith('gsk_')) {
             showStatus('Invalid API key format', 'error');
             return;
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, function () {
             showStatus('Settings saved successfully!', 'success');
 
-            // Send message to background script
+            //send message to background script
             chrome.runtime.sendMessage({
                 action: 'saveSettings',
                 apiKey: apiKey,
@@ -50,12 +50,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Attempt to launch widget if on Codeforces problem page
+            //launch widget on Codeforces problem page
             launchAIWidget(apiKey, language);
         });
     });
 
-    // Test connection
+    //connection testing
     testConnectionButton.addEventListener('click', async function() {
         const apiKey = apiKeyInput.value.trim();
 
@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0) {
                     showStatus('✅ Connection successful! Now click Save Settings to launch the AI widget.', 'success');
-                    // Do not launch widget or close popup here
                 } else {
                     throw new Error('Invalid response format');
                 }
@@ -117,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 languageSelect.value = 'cpp';
                 showStatus('Settings cleared', 'success');
                 
-                // Clear any stored problem states as well
+                // Clear any stored problem states 
                 chrome.storage.local.clear(function() {
                     console.log('Cleared all problem progress data');
                 });
@@ -125,15 +124,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Function to launch AI widget
+    //AI widget launch function
     function launchAIWidget(apiKey, language) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             const currentTab = tabs[0];
             
             if (currentTab && currentTab.url && currentTab.url.includes('codeforces.com')) {
-                // Check if it's a problem page
                 if (currentTab.url.includes('/problem/') || currentTab.url.includes('/problemset/problem/')) {
-                    // Inject content script and CSS
                     chrome.scripting.executeScript({
                         target: { tabId: currentTab.id },
                         files: ['content.js']
@@ -143,15 +140,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             files: ['styles.css']
                         });
                     }).then(() => {
-                        // Send message to initialize the widget
                         chrome.tabs.sendMessage(currentTab.id, {
                             action: 'initializeWidget',
                             apiKey: apiKey,
                             language: language
                         });
                         showStatus('🤖 AI Widget launched!', 'success');
-                        
-                        // Close popup after short delay
                         setTimeout(() => {
                             window.close();
                         }, 1000);
@@ -208,10 +202,10 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.opacity = '0.6';
     });
 
-    // Enter key support
+    
     apiKeyInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            testConnectionButton.click(); // Test first, then auto-save on success
+            testConnectionButton.click(); //auto save on successful connection testing
         }
     });
 

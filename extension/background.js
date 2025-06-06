@@ -1,5 +1,4 @@
-// Enhanced Background script for Codeforces AI Assistant
-
+//background script 
 chrome.runtime.onInstalled.addListener((details) => {
     console.log('Codeforces AI Assistant installed/updated');
 
